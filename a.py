@@ -1,7 +1,7 @@
 import imageio
 import numpy as np
 import os
-
+from scipy.ndimage.interpolation import zoom
 
 
 data_dir = 'data'
@@ -37,14 +37,14 @@ ff = os.listdir(images_dir)
 ff = map(lambda f: os.path.join(images_dir, f), ff)
 ff = filter(lambda f: f in filenames_set, ff)
 ff = sorted(ff)
+assert filenames == ff
 
-"""
 f = ff[0]
 print(f)
 im = imageio.imread(f)
 x = np.array(im)
 x = x.transpose([2, 0, 1])
 print(x.shape, x.dtype, x.min(), x.max(), x.mean(), x.std())
-"""
 
-assert filenames == ff
+x = zoom(x, (1, 64 / x.shape[1], 64 / x.shape[2]))
+print(x.shape, x.dtype, x.min(), x.max(), x.mean(), x.std())
