@@ -3,6 +3,7 @@ import imageio
 import numpy as np
 import os
 from scipy.ndimage.interpolation import zoom
+from tqdm import tqdm
 
 
 def parse_flags():
@@ -59,24 +60,20 @@ def process_labels(data_root, selected_dataset, out_dir):
     return filenames
 
 
-def process_images(data_root, selected_dataset, filenames, out_dir):
+def process_images(data_root, selected_dataset, listed_filenames, out_dir):
     images_dir = '%s/%s/' % (data_root, selected_dataset)
     ff = os.listdir(images_dir)
     ff = map(lambda f: os.path.join(images_dir, f), ff)
-    filenames_set = set(filenames)
-    ff = filter(lambda f: f in filenames_set, ff)
+    listed_filenames_set = set(listed_filenames)
+    ff = filter(lambda f: f in listed_filenames_set, ff)
     ff = sorted(ff)
-    assert ff == filenames
+    assert ff == listed_filenames
 
-    f = ff[0]
-    print(f)
-    im = imageio.imread(f)
-    x = np.array(im)
-    x = x.transpose([2, 0, 1])
-    print(x.shape, x.dtype, x.min(), x.max(), x.mean(), x.std())
-
-    x = zoom(x, (1, 64 / x.shape[1], 64 / x.shape[2]))
-    print(x.shape, x.dtype, x.min(), x.max(), x.mean(), x.std())
+    for i, image_fn in tqdm(enumerate(ff), total=len(ff)):
+        im = imageio.imread(image_fn)
+        x = np.array(im)
+        x = x.transpose([2, 0, 1])
+        x = zoom(x, (1, 64 / x.shape[1], 64 / x.shape[2]))
 
 
 def run(flags):
