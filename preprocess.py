@@ -9,11 +9,11 @@ def parse_flags():
     a = ArgumentParser()
     a.add_argument('--data_root', type=str, default='data')
     a.add_argument('--selected_dataset', type=str, default='lfw_5590')
-    a.add_argument('--out_dir', type=str, default='data/processed')
+    a.add_argument('--out_dir', type=str, default='data/proc')
     return a.parse_args()
 
 
-def process_labels(data_root, selected_dataset):
+def process_labels(data_root, selected_dataset, out_dir):
     f = os.path.join(data_root, 'training.txt')
     lines = open(f).readlines()
     lines = filter(lambda s: selected_dataset in s, lines)
@@ -38,15 +38,35 @@ def process_labels(data_root, selected_dataset):
     print(landmarks[0])
     print()
 
+    assert not os.path.exists(out_dir)
+    os.makedirs(out_dir)
+    f = os.path.join(out_dir, 'filenames.txt')
+    with open(f, 'wb') as out:
+        for f in filenames:
+            line = '%s\n' % f
+            out.write(line.encode('utf-8'))
+    f = os.path.join(out_dir, 'genders.npy')
+    genders.tofile(f)
+    f = os.path.join(out_dir, 'smiles.npy')
+    smiles.tofile(f)
+    f = os.path.join(out_dir, 'glasses.npy')
+    glasses.tofile(f)
+    f = os.path.join(out_dir, 'poses.npy')
+    poses.tofile(f)
+    f = os.path.join(out_dir, 'landmarks.npy')
+    landmarks.tofile(f)
+
     return filenames
 
 
-def process_images(data_root, selected_dataset, filenames_set):
+def process_images(data_root, selected_dataset, filenames, out_dir):
     images_dir = '%s/%s/' % (data_root, selected_dataset)
     ff = os.listdir(images_dir)
     ff = map(lambda f: os.path.join(images_dir, f), ff)
+    filenames_set = set(filenames)
     ff = filter(lambda f: f in filenames_set, ff)
     ff = sorted(ff)
+    assert ff == filenames
 
     f = ff[0]
     print(f)
@@ -60,10 +80,10 @@ def process_images(data_root, selected_dataset, filenames_set):
 
 
 def run(flags):
-    filenames = process_labels(flags.data_root, flags.selected_dataset)
-    filenames_set = set(filenames)
-
-    process_images(flags.data_root, flags.selected_dataset, filenames_set)
+    filenames = process_labels(flags.data_root, flags.selected_dataset,
+                               flags.out_dir)
+    process_images(flags.data_root, flags.selected_dataset, filenames,
+                   flags.out_dir)
 
 
 if __name__ == '__main__':
