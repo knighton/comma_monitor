@@ -35,11 +35,6 @@ def process_labels(data_root, selected_dataset, out_dir):
         filenames[i] = os.path.join(data_root, ss[0].replace('\\', os.path.sep))
         genders[i], smiles[i], glasses[i], poses[i] = map(int, ss[-4:])
         landmarks[i, np.arange(10)] = tuple(map(float, ss[1:-4]))
-    print()
-    print(filenames[0])
-    print(genders[0], smiles[0], glasses[0], poses[0])
-    print(landmarks[0])
-    print()
 
     assert not os.path.exists(out_dir)
     os.makedirs(out_dir)
