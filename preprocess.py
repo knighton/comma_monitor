@@ -13,10 +13,10 @@ def parse_flags():
     return a.parse_args()
 
 
-def run(flags):
-    f = os.path.join(flags.data_root, 'training.txt')
+def process_labels(data_root, selected_dataset):
+    f = os.path.join(data_root, 'training.txt')
     lines = open(f).readlines()
-    lines = filter(lambda s: flags.selected_dataset in s, lines)
+    lines = filter(lambda s: selected_dataset in s, lines)
     lines = map(lambda s: s.strip(), lines)
     lines = sorted(lines)
     n = len(lines)
@@ -29,8 +29,7 @@ def run(flags):
     landmarks = np.zeros((n, 10), 'float32')
     for i, line in enumerate(lines):
         ss = line.split()
-        filenames[i] = os.path.join(
-            flags.data_root, ss[0].replace('\\', os.path.sep))
+        filenames[i] = os.path.join(data_root, ss[0].replace('\\', os.path.sep))
         genders[i], smiles[i], glasses[i], poses[i] = map(int, ss[-4:])
         landmarks[i, np.arange(10)] = tuple(map(float, ss[1:-4]))
     print()
@@ -38,14 +37,16 @@ def run(flags):
     print(genders[0], smiles[0], glasses[0], poses[0])
     print(landmarks[0])
     print()
-    filenames_set = set(filenames)
 
-    images_dir = '%s/%s/' % (flags.data_root, flags.selected_dataset)
+    return filenames
+
+
+def process_images(data_root, selected_dataset, filenames_set):
+    images_dir = '%s/%s/' % (data_root, selected_dataset)
     ff = os.listdir(images_dir)
     ff = map(lambda f: os.path.join(images_dir, f), ff)
     ff = filter(lambda f: f in filenames_set, ff)
     ff = sorted(ff)
-    assert filenames == ff
 
     f = ff[0]
     print(f)
@@ -56,6 +57,13 @@ def run(flags):
 
     x = zoom(x, (1, 64 / x.shape[1], 64 / x.shape[2]))
     print(x.shape, x.dtype, x.min(), x.max(), x.mean(), x.std())
+
+
+def run(flags):
+    filenames = process_labels(flags.data_root, flags.selected_dataset)
+    filenames_set = set(filenames)
+
+    process_images(flags.data_root, flags.selected_dataset, filenames_set)
 
 
 if __name__ == '__main__':
