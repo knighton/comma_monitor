@@ -11,6 +11,8 @@ def parse_flags():
     a.add_argument('--data_root', type=str, default='data')
     a.add_argument('--selected_dataset', type=str, default='lfw_5590')
     a.add_argument('--out_dir', type=str, default='data/proc')
+    a.add_argument('--want_height', type=int, default=64)
+    a.add_argument('--want_width', type=int, default=64)
     return a.parse_args()
 
 
@@ -60,7 +62,8 @@ def process_labels(data_root, selected_dataset, out_dir):
     return filenames
 
 
-def process_images(data_root, selected_dataset, listed_filenames, out_dir):
+def process_images(data_root, selected_dataset, listed_filenames, out_dir,
+                   want_height, want_width):
     images_dir = '%s/%s/' % (data_root, selected_dataset)
     ff = os.listdir(images_dir)
     ff = map(lambda f: os.path.join(images_dir, f), ff)
@@ -69,18 +72,24 @@ def process_images(data_root, selected_dataset, listed_filenames, out_dir):
     ff = sorted(ff)
     assert ff == listed_filenames
 
+    images = np.zeros((len(ff), 1, want_height, want_width), 'uint8')
     for i, image_fn in tqdm(enumerate(ff), total=len(ff)):
         im = imageio.imread(image_fn)
         x = np.array(im)
         x = x.transpose([2, 0, 1])
-        x = zoom(x, (1, 64 / x.shape[1], 64 / x.shape[2]))
+        x = zoom(x, (1, want_height / x.shape[1], want_width / x.shape[2]))
+        x = x.mean(0, keepdims=True)
+        images[i] = x
+
+    f = os.path.join(out_dir, 'images.npy')
+    images.tofile(f)
 
 
 def run(flags):
     filenames = process_labels(flags.data_root, flags.selected_dataset,
                                flags.out_dir)
     process_images(flags.data_root, flags.selected_dataset, filenames,
-                   flags.out_dir)
+                   flags.out_dir, flags.want_height, flags.want_width)
 
 
 if __name__ == '__main__':
